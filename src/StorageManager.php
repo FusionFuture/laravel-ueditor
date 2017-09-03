@@ -40,6 +40,62 @@ class StorageManager
         $this->disk = $disk;
     }
 
+    public function remoteFiles(array $sourceURLs, $allowedExtensions)
+    {
+        /* 返回格式JSON
+         {
+            "state": "SUCCESS",
+            "list": [{
+                "url": "upload/1.jpg",
+                "source": "http://b.com/2.jpg",
+                "state": "SUCCESS"
+                }, {
+                "url": "upload/2.jpg",
+                "source": "http://b.com/2.jpg",
+                "state": "SUCCESS"
+                },]
+        }
+        */
+
+        $config = $this->getUploadConfig('catch-image');
+
+        $savedFiles = [];
+
+        foreach ((array)$sourceURLs as $sourceURL) {
+            $savedFile = new \stdClass();
+            $savedFile->filename = $this->_remoteFilesGetFilename($sourceURL, $config);
+            $this->disk->put(
+                $savedFile->filename,
+                fopen($sourceURL, 'r')
+            );
+
+            $savedFile->url = $this->getUrl($savedFile->filename);
+            $savedFile->source = $sourceURL;
+
+            $savedFiles[] = $savedFile;
+        }
+
+        $response = [
+            'state' => 'SUCCESS',
+            'list' => array_map(function($savedFile) {
+                return [
+                    'url' => $savedFile->url,
+                    'source' => $savedFile->source,
+                    'state' => 'SUCCESS'
+                ];
+            }, $savedFiles)
+        ];
+
+        return response()->json($response);
+    }
+
+    protected function _remoteFilesGetFilename($url, array $config) {
+        $remoteFileName = parse_url($url, PHP_URL_PATH);
+        $ext = pathinfo($remoteFileName, PATHINFO_EXTENSION) ?: 'jpg';
+        $filename = md5(parse_url($url, PHP_URL_PATH)) . '.' . $ext;
+        return $this->formatPath($config['path_format'], $filename);
+    }
+
     /**
      * Upload a file.
      *

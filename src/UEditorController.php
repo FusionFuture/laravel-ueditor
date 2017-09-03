@@ -41,6 +41,11 @@ class UEditorController extends Controller
                     $request->get('start'),
                     $request->get('size'),
                     $upload['fileManagerAllowFiles']);
+            case $upload['catcherActionName']:
+                return $storage->remoteFiles(
+                    $request->get($upload['catcherFieldName']),
+                    $upload['catcherAllowFiles']
+                );
             default:
                 return $storage->upload($request);
         }
