@@ -92,7 +92,7 @@ class StorageManager
     protected function _remoteFilesGetFilename($url, array $config) {
         $remoteFileName = parse_url($url, PHP_URL_PATH);
         $ext = pathinfo($remoteFileName, PATHINFO_EXTENSION) ?: 'jpg';
-        $filename = md5(parse_url($url, PHP_URL_PATH)) . '.' . $ext;
+        $filename = md5($url) . '.' . $ext;
         return $this->formatPath($config['path_format'], $filename);
     }
 
